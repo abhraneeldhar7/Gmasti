@@ -1,0 +1,20 @@
+---
+import AppLayout from "../../layouts/AppLayout.astro";
+import CallbackHandler from "../../components/CallbackHandler";
+---
+
+<AppLayout title="Signing In">
+  <section class="status">
+    <CallbackHandler client:load />
+  </section>
+
+  <style>
+    .status {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 2rem;
+      text-align: center;
+    }
+  </style>
+</AppLayout>

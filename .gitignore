@@ -1,0 +1,11 @@
+node_modules/
+dist/
+__pycache__/
+*.pyc
+.DS_Store
+apps/server/.venv/
+apps/server/.env
+apps/extension/.env
+apps/webapp/.env
+.astro/
+apps/extension/public/manifest.json

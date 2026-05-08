@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Gmasti",
+  "version": "0.1.0",
+  "description": "Rewrite X and LinkedIn posts into chaotic new tones.",
+  "permissions": ["storage", "identity"],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://www.linkedin.com/*",
+    "__API_PERMISSION__"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Gmasti"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*", "https://www.linkedin.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "oauth2": {
+    "client_id": "__GOOGLE_CLIENT_ID__",
+    "scopes": ["openid", "email", "profile"]
+  }
+}
+

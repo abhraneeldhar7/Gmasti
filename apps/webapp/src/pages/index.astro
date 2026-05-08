@@ -1,0 +1,23 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import LoginButton from "../components/LoginButton";
+import ExtensionPopover from "@/components/ExtensionPopover";
+---
+
+<AppLayout title="Gmasti">
+  <section class="landing">
+    <LoginButton client:load />
+    <ExtensionPopover client:load />
+  </section>
+
+
+  <style>
+    .landing {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      gap: 0.75rem;
+      padding: 2rem;
+    }
+  </style>
+</AppLayout>

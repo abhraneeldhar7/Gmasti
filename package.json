@@ -1,0 +1,15 @@
+{
+  "name": "gmasti",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/extension",
+    "apps/webapp"
+  ],
+  "scripts": {
+    "build:extension": "npm run build --workspace apps/extension",
+    "watch:extension": "npm run watch --workspace apps/extension",
+    "dev:webapp": "npm run dev --workspace apps/webapp",
+    "build:webapp": "npm run build --workspace apps/webapp"
+  }
+}
