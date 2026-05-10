@@ -1,0 +1,9 @@
+---
+import AppLayout from "../layouts/AppLayout.astro";
+import ProCheckout from "@/components/ProCheckout";
+---
+
+<AppLayout title="Pro">
+  <script is:inline src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <ProCheckout client:load />
+</AppLayout>

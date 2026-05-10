@@ -7,6 +7,10 @@ CREATE TABLE IF NOT EXISTS users (
     joined TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_subscription_id TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_current_period_end TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS razorpay_cancel_at_period_end BOOLEAN NOT NULL DEFAULT FALSE;
+
 CREATE TABLE IF NOT EXISTS posts (
     post_url TEXT NOT NULL,
     theme TEXT NOT NULL,

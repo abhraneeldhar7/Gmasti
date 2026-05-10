@@ -73,7 +73,9 @@ export default function ExtensionPopover() {
         </div>
 
         <div className="flex mt-10 justify-between items-center w-full">
-            <Button>Upgrade</Button>
+            <a href="/pro" target="_blank" rel="noopener noreferrer">
+              <Button>Upgrade</Button>
+            </a>
             <Popover>
                 <PopoverTrigger asChild>
                     <SettingsIcon size={24} fill="white" className="hover:rotate-[90deg] transition-all duraiton-300" />

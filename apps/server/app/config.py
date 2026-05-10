@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     allow_origin_regex: str = r"^chrome-extension://.*$|^http://localhost(:\d+)?$"
     allowed_web_origins: str = "http://localhost:3000"
 
+    razorpay_key_id: str = ""
+    razorpay_key_secret: str = ""
+    razorpay_webhook_secret: str = ""
+    razorpay_plan_id: str = ""
+
     @property
     def allowed_origins(self) -> list[str]:
         return [origin.strip() for origin in self.allowed_web_origins.split(",") if origin.strip()]

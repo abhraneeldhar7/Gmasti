@@ -7,6 +7,7 @@ import { UsageChart } from "@/components/usageChart";
 export default function Dashboard() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [plan, setPlan] = useState("free");
   const [usage, setUsage] = useState({ used_today: 0, remaining_today: 0, limit: 100 });
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function Dashboard() {
       .then((user) => {
         setName(user.name);
         setEmail(user.email);
+        setPlan(user.plan);
       })
       .catch(() => {
         window.location.replace("/?error=Session%20expired.%20Sign%20in%20again.");
@@ -65,6 +67,12 @@ export default function Dashboard() {
         <div>
           <h1 className="text-2xl font-semibold">{name || "User"}</h1>
           <p className="text-sm text-muted-foreground">{email}</p>
+          <p className="text-xs mt-1">
+            Plan: <span className={`font-semibold ${plan === "pro" ? "text-green-600" : ""}`}>{plan}</span>
+            {plan !== "pro" && (
+              <a href="/pro" className="ml-2 text-blue-500 hover:underline">Upgrade</a>
+            )}
+          </p>
         </div>
         <Button variant="outline" onClick={logout}>
           Logout

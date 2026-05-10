@@ -4,7 +4,11 @@ export type StoredUser = {
   user_id: string;
   email: string;
   name: string;
+  plan: string;
   joined: string;
+  razorpay_subscription_id: string | null;
+  razorpay_current_period_end: string | null;
+  razorpay_cancel_at_period_end: boolean;
 };
 
 export type StoredAuth = {

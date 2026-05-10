@@ -213,7 +213,9 @@ export default function App() {
           </div>
 
           <div className="flex mt-10 justify-between items-center w-full">
-            <Button>Upgrade</Button>
+            <a href={`${WEBAPP_BASE_URL}/pro`} target="_blank" rel="noopener noreferrer">
+              <Button>Upgrade</Button>
+            </a>
             <Popover>
               <PopoverTrigger asChild>
                 <SettingsIcon

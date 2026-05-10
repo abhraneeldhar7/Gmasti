@@ -1,0 +1,19 @@
+name: Downgrade expired subscriptions
+
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  downgrade:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger downgrade endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        run: |
+          curl -s -X POST "$API_BASE_URL/admin/downgrade-expired" \
+            -H "X-Cron-Secret: $CRON_SECRET" \
+            -H "Content-Type: application/json"

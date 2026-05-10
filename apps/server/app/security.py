@@ -56,7 +56,10 @@ def get_current_user(
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT user_id, email, name, plan, joined
+                SELECT user_id, email, name, plan, joined,
+                       razorpay_subscription_id,
+                       razorpay_current_period_end,
+                       razorpay_cancel_at_period_end
                 FROM users
                 WHERE user_id = %s
                 """,

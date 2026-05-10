@@ -9,7 +9,10 @@ def get_or_create_user(connection, google_claims: dict) -> dict:
     with connection.cursor() as cursor:
         cursor.execute(
             """
-            SELECT user_id, email, name, plan, joined
+            SELECT user_id, email, name, plan, joined,
+                   razorpay_subscription_id,
+                   razorpay_current_period_end,
+                   razorpay_cancel_at_period_end
             FROM users
             WHERE google_sub = %s
             """,
@@ -35,7 +38,10 @@ def get_or_create_user(connection, google_claims: dict) -> dict:
             """
             INSERT INTO users (user_id, google_sub, email, name)
             VALUES (%s, %s, %s, %s)
-            RETURNING user_id, email, name, plan, joined
+            RETURNING user_id, email, name, plan, joined,
+                     razorpay_subscription_id,
+                     razorpay_current_period_end,
+                     razorpay_cancel_at_period_end
             """,
             (user_id, google_sub, email, name),
         )
