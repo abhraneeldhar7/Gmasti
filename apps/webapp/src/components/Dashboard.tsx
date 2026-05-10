@@ -39,7 +39,7 @@ export default function Dashboard() {
   const usagePercent = Math.min((usage.used_today / (usage.limit || 1)) * 100, 100);
 
   return (
-    <div className="max-w-[600px] mx-auto w-full space-y-10 pt-20 px-5">
+    <div className="max-w-[600px] min-h-screen mx-auto w-full space-y-10 pt-20 px-5">
       <a
         href="/"
         className="text-sm w-fit text-muted-foreground hover:text-foreground flex items-center gap-2"

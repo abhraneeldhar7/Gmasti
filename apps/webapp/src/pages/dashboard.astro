@@ -1,8 +1,10 @@
 ---
+import Footer from "@/components/Footer.astro";
 import AppLayout from "../layouts/AppLayout.astro";
 import DashboardComponent from "@/components/Dashboard";
 ---
 
 <AppLayout title="Dashboard">
   <DashboardComponent client:load />
+  <Footer/>
 </AppLayout>

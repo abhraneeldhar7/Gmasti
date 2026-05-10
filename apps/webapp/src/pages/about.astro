@@ -1,0 +1,113 @@
+---
+import AboutImg from "@/assets/aboutsImg.jpg";
+import Footer from "@/components/Footer.astro";
+import PostRender from "@/components/ui/markdown-render/markdown-render";
+import AppLayout from "@/layouts/AppLayout.astro";
+
+const aboutContent = [
+    {
+        title: "Why Gmasti exists",
+        content:
+            "I built Gmasti because my timeline was exhausting me.\n\nSame takes, same arguments, same energy every day. I didn't want to leave X or LinkedIn entirely, but I needed the feed to feel less like a chore.\n\nTurns out reading someone's hot take in caveman speak makes it considerably less infuriating. So I built the thing.",
+    },
+    {
+        title: "What it actually does",
+        content:
+            "Gmasti is a Chrome extension that rewrites post text in your feed in real time. You pick a tone, turn it on, and scroll normally. Posts get rewritten as they come into view.\n\nCurrently supported tones: **Caveman**, **Medieval Victorian English**, **Gen Z Slop**, **Anime Kitten UwU**, and **Hood Lingo**.\n\nIt works on **X** and **LinkedIn**. The original posts are never touched. Everything happens locally in your browser.",
+    },
+    {
+        title: "How the rewriting works",
+        content:
+            "When a post enters your viewport, its text is sent to our server, which calls **Groq's API** to rewrite it using a fast language model.\n\nThe rewritten version is cached in your browser so revisiting the same post does not trigger another request. The server also caches previously seen posts so repeat requests across sessions are returned instantly without hitting Groq again.\n\nPost text is not stored beyond the time needed to process it. The cache holds the rewritten output, not the original.",
+    },
+    {
+        title: "Free and Pro tiers",
+        content:
+            "Gmasti is free to use with a limit of **100 post rewrites per day**.\n\nIf you spend a lot of time on your feed, **Gmasti Pro** raises that limit to **500 rewrites per day** for **₹49 per month**.\n\nThe limit resets at midnight UTC. Local browser cache hits do not count toward your daily limit.",
+    },
+    {
+        title: "The stack, if you are curious",
+        content:
+            "The extension is built with **React** and compiled with **Vite**. The background service worker handles auth and API communication. The content script handles viewport detection, batching, and DOM rewriting.\n\nThe backend is **FastAPI**, with **Neon Postgres** for user accounts, usage tracking, and the rewrite cache. Payments are handled by **Dodo Payments**.\n\nAuth is Google OAuth via `chrome.identity`, the browser's native OAuth flow for extensions. No auth library, no redirects, no bridge pages.",
+    },
+    {
+        title: "Open source",
+        content:
+            "Gmasti is fully open source. The extension and the backend server are both public.\n\nYou can read every line of code, audit what gets sent where, or run the whole thing yourself on your own machine so your data never touches our servers.\n\n**GitHub:** [github.com/yourusername/gmasti](https://github.com/yourusername/gmasti)\n\nIf you find a security issue, please open an issue or reach out before disclosing it publicly.",
+    },
+    {
+        title: "Made by",
+        content:
+            "Gmasti is built and maintained by **Abhraneel Dhar**, an indie developer from Kolkata, India.\n\nIf you want to say hi or report something broken: [mail me](mailto:abhraneeldhar@gmail.com)",
+    },
+];
+---
+
+<AppLayout title="About">
+    <main class="max-w-[700px] mx-auto w-full py-10" aria-label="About">
+        <a
+            href="/"
+            class="text-sm w-fit text-muted-foreground hover:text-foreground flex items-center gap-2"
+        >
+            <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+            >
+                <path d="m15 18-6-6 6-6"></path>
+            </svg>
+            Home
+        </a>
+
+        <section
+            class="relative h-[300px] md:h-[450px] px-5 md:px-20 py-10 mt-10 flex items-center"
+            aria-labelledby="about-title"
+        >
+            <h1 id="about-title" class="text-[35px] font-[450]">
+                <span class="text-[32px]">About</span>
+                <br />
+                <span class="text-[45px]">Gmasti</span>
+            </h1>
+
+            <img
+                src={AboutImg.src}
+                alt="Abstract about section background"
+                class="h-full w-full invert dark:invert-0 absolute top-0 left-0 z-[-1]"
+            />
+        </section>
+
+        <section
+            class="mt-10 px-4 flex flex-col gap-10"
+            aria-label="About details"
+        >
+            {
+                aboutContent.map((section, index) => (
+                    <>
+                        <article class="flex gap-1 md:gap-5 md:flex-row flex-col">
+                            <h2 class="text-[25px] md:flex-1 px-[8px]">
+                                {section.title}
+                            </h2>
+                            <div class="md:flex-1">
+                                <PostRender content={section.content} />
+                            </div>
+                        </article>
+                        {index < aboutContent.length - 1 && (
+                            <div
+                                class="w-full border my-4"
+                                aria-hidden="true"
+                            />
+                        )}
+                    </>
+                ))
+            }
+        </section>
+    </main>
+    <Footer />
+</AppLayout>
