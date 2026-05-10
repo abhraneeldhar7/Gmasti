@@ -17,12 +17,10 @@ const DEFAULT_SETTINGS = {
 };
 
 const MESSAGE_TYPES = {
-  GET_SETTINGS: "GET_SETTINGS",
   SAVE_SETTINGS: "SAVE_SETTINGS",
   GET_SESSION: "GET_SESSION",
   LOGIN: "LOGIN",
   LOGOUT: "LOGOUT",
-  REFRESH_USAGE: "REFRESH_USAGE",
 };
 
 const MAX_CUSTOM_PROMPT_LENGTH = 100;
@@ -36,9 +34,9 @@ const THEME_OPTIONS = [
   { value: "hood_lingo", label: "Hood Lingo" },
 ];
 
-const WEBAPP_BASE = import.meta.env.VITE_API_BASE_URL;
-if (!WEBAPP_BASE) {
-  throw new Error("VITE_API_BASE_URL is required but not set in apps/extension/.env");
+const WEBAPP_BASE_URL = import.meta.env.VITE_WEBAPP_BASE_URL;
+if (!WEBAPP_BASE_URL) {
+  throw new Error("VITE_WEBAPP_BASE_URL is required but not set in apps/extension/.env");
 }
 
 export default function App() {
@@ -57,29 +55,13 @@ export default function App() {
 
   async function refresh() {
     setStatus({ loading: true, message: "" });
-    const [sessionState, savedSettings] = await Promise.all([
-      sendMessage(MESSAGE_TYPES.GET_SESSION),
-      sendMessage(MESSAGE_TYPES.GET_SETTINGS),
-    ]);
+    const sessionState = await sendMessage(MESSAGE_TYPES.GET_SESSION);
     setSession(sessionState);
-    setSettings(savedSettings);
-    if (savedSettings.custom_prompt) {
-      setCustomPrompt(savedSettings.custom_prompt);
+    setSettings(sessionState.settings || DEFAULT_SETTINGS);
+    if (sessionState.settings?.custom_prompt) {
+      setCustomPrompt(sessionState.settings.custom_prompt);
     }
     setStatus({ loading: false, message: "" });
-
-    refreshUsage();
-  }
-
-  async function refreshUsage() {
-    try {
-      const fresh = await sendMessage(MESSAGE_TYPES.REFRESH_USAGE);
-      setSession((current) =>
-        current ? { ...current, usage: fresh } : current,
-      );
-    } catch {
-      // silent
-    }
   }
 
   async function handleLogin() {
@@ -265,7 +247,7 @@ export default function App() {
                     asChild
                   >
                     <a
-                      href={`${WEBAPP_BASE}/dashboard`}
+                      href={`${WEBAPP_BASE_URL}/dashboard`}
                       target="_blank"
                       rel="noopener noreferrer"
                     >

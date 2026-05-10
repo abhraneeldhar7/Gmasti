@@ -5,13 +5,10 @@
 When you use Gmasti, three things happen:
 
 **1. Sign in with Google**
-Your Google email address and a Google-assigned ID number are stored in our database. That is the only personal information we hold. No name, no profile picture, no phone number.
+Your Google name, email address and a Google-assigned ID number are stored in our database. That is the only personal information we hold. No profile picture, no phone number.
 
 **2. Post text gets rewritten**
-When a post enters your viewport, its text is sent to our server, which forwards it to Groq's AI API for rewriting. The text is not stored on our server after the response comes back. The rewritten result is cached in your own browser so future views of the same post don't need another API call.
-
-**3. Usage is counted**
-We track how many posts you have rewritten today to enforce the 100 posts/day limit. This is a number in a database row. Nothing else.
+When a post enters your viewport, its text is sent to our server, which forwards it to Groq's AI API for rewriting. The rewritten result is cached in your own browser so future views of the same post don't need another API call.
 
 That's the full list. We do not read your DMs, your followers, your likes, or anything else on X or LinkedIn.
 
@@ -21,9 +18,9 @@ That's the full list. We do not read your DMs, your followers, your likes, or an
 
 Gmasti is fully open source. Every line of code — the Chrome extension and the backend server — is publicly available for anyone to read, audit, or run themselves.
 
-**GitHub repository:** [github.com/yourusername/gmasti](https://github.com/yourusername/gmasti)
+**GitHub repository:** [github/Gmasti](https://github.com/abhraneeldhar7/Gmasti)
 
-If you find a security vulnerability, please open a GitHub issue or reach out privately before disclosing it publicly.
+If you find a security vulnerability, please open a GitHub issue.
 
 ---
 
@@ -55,7 +52,7 @@ Go to the GitHub repository and click the green **Code** button, then **Download
 Alternatively, if you have Git installed:
 
 ```
-git clone https://github.com/yourusername/gmasti
+git clone https://github.com/abhraneeldhar7/Gmasti
 ```
 
 ---

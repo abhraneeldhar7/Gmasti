@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { startGoogleLogin } from "../lib/auth";
 import { Button } from "./ui/button";
 
-export default function LoginButton() {
+export default function LoginButton({ className }: { className?: string }) {
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -28,10 +28,9 @@ export default function LoginButton() {
 
   return (
     <>
-      <Button type="button" disabled={busy} onClick={handleLogin}>
-        Sign in with Google
+      <Button type="button" size="lg" disabled={busy} onClick={handleLogin} className={className}>
+        Login
       </Button>
-      {message ? <p aria-live="polite">{message}</p> : null}
     </>
   );
 }

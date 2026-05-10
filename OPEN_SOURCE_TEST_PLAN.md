@@ -1,128 +1,170 @@
 # Gmasti Test Plan
 
-This repo does not yet have an automated test suite, so this file is a practical release checklist for local verification before open-sourcing or publishing.
+No automated test suite yet. This is a practical release checklist for local verification before open-sourcing or publishing.
 
 ## Scope
 
-We want to verify:
-
-- Google auth works end to end
-- X post rewriting works
-- LinkedIn post rewriting works
+- Google auth end to end
+- X post rewriting
+- LinkedIn post rewriting
+- Custom themes (hash-based, deterministic)
 - Long posts preserve readable paragraph breaks
 - Native feed controls still work after rewrite
-- Cache behavior is sane
-- Hourly rate limiting works at `100` rewrites per rolling hour
+- Cache behavior (localStorage + DB + eviction)
+- Daily rate limiting at 100 rewrites per calendar day
+- Random theme picks only from pre-made themes (not custom)
+- No excessive API calls on popup open/close
+- Admin cleanup endpoint
 
 ## Environment Setup
 
-1. Start the server from `apps/server`
-2. Build the extension from `apps/extension`
-3. Load `apps/extension/dist` as an unpacked extension in Chrome
-4. Sign in with a Google account that is allowed by the configured OAuth app
+1. Start server: `cd apps/server && uvicorn app.main:app --reload`
+2. Build extension: `cd apps/extension && npm run build`
+3. Load `apps/extension/dist` as unpacked extension in Chrome
+4. Sign in with a Google account allowed by the configured OAuth app
 
 ## Manual Tests
 
 ### 1. Server Health
 
-- Open `http://localhost:8000/health`
-- Expect `{"status":"ok"}`
+- Open `http://127.0.0.1:8000/health`
+- Expect `{"status":"we cooking"}`
 
 ### 2. Extension Loads Cleanly
 
 - Open `chrome://extensions`
-- Load the unpacked extension from `apps/extension/dist`
-- Confirm there are no immediate extension errors
-- Open the popup and confirm the UI renders
+- Load unpacked from `apps/extension/dist`
+- No extension errors in `chrome://extensions` or background console
+- Open popup — UI renders without console errors
 
 ### 3. Google Login
 
-- Click `Sign in with Google`
-- Complete the OAuth flow
-- Confirm the popup shows the signed-in user name and email
-- Confirm usage is displayed in the popup
+- Click "Continue with Google"
+- Complete OAuth flow
+- Popup shows signed-in user name and masked email
+- Usage bar displays with correct daily count
+- Close and reopen popup — state persists (no re-fetch flash, no loading spinner)
 
 ### 4. X Rewrite
 
 - Open `https://x.com/`
-- Find a few visible tweets with normal text content
-- Confirm the loader appears briefly
-- Confirm text is replaced with a rewritten version
-- Confirm scrolling causes newly visible tweets to rewrite
+- Visible tweets get rewritten with loader briefly appearing
+- Text is replaced with the selected theme's style
+- Scrolling triggers rewrites on new tweets
+- Same tweet across scrolls gets consistent theme (deterministic for "random")
 
 ### 5. LinkedIn Rewrite
 
 - Open `https://www.linkedin.com/feed/`
-- Confirm visible feed posts rewrite
-- Confirm promoted posts are not rewritten
-- Confirm rewriting does not break the card layout
+- Visible feed posts rewrite
+- Promoted posts (marked "Promoted") are skipped
+- Card layout is not broken after rewrite
 
-### 6. Long Post Newlines
+### 6. Custom Theme
 
-- Find a long X post with several paragraphs
-- Find a long LinkedIn post with several paragraphs
-- Confirm the rewritten result still renders as separate readable paragraphs
-- Confirm the DOM visually shows line breaks rather than one collapsed wall of text
+- Open popup, click "Custom", write a prompt (e.g. "write like shakespeare")
+- Save — popup shows "Custom" as selected theme
+- Feed posts rewrite using the custom instruction
+- Change custom prompt text — hash changes, old cached rewrites are not reused
+- Re-selecting the same prompt text — same hash, cached rewrites are reused
 
-### 7. LinkedIn Native Controls
+### 7. Multiple Themes
 
-- On a long LinkedIn post, click `... more`
-- Confirm the post can still expand after rewriting
-- Click inline links, mentions, and hashtags in a rewritten LinkedIn post
-- Confirm those controls still work
+- Select "Medieval" — posts rewrite in old-world English
+- Select "Random" — each post gets a deterministic theme from the 5 pre-made themes (never "Custom")
+- Custom selected means only that specific hashed custom theme
 
-### 8. Theme Stability
+### 8. Long Post Newlines
 
-- Leave the popup in `Randomize per post`
-- Refresh a feed page
-- Confirm the same post gets a stable theme when served from cache
-- Switch to a specific theme and confirm new rewrites use that theme
+- Find a long X post with paragraphs
+- Find a long LinkedIn post with paragraphs
+- Rewritten result renders readable line breaks in DOM (not one collapsed wall of text)
 
-### 9. Cache Behavior
+### 9. LinkedIn Native Controls
+
+- On a long LinkedIn post, click "...more" — post expands after rewrite
+- Inline links, mentions, and hashtags in rewritten posts still work
+
+### 10. Cache Behavior — localStorage
 
 - Rewrite a post once
-- Refresh the page
-- Confirm the same post loads quickly from cache
-- Confirm cached rewrites still render with correct line breaks
+- Refresh the page — post loads from local cache (no loader flash, instant rewrite)
+- Verify in `chrome.storage.local` that old cache entries get pruned when count exceeds 500
 
-### 10. Hourly Rate Limit
+### 11. Cache Behavior — Server DB
 
-- Sign in with a test account
-- Trigger rewrites until usage reaches the limit
-- Confirm the server blocks requests above `100` rewrites in the last hour
-- Confirm the extension surfaces the failure cleanly instead of silently breaking
-- Confirm usage resets after the rolling one-hour window passes
+- Server returns cached DB content for repeated `(post_url, theme)` lookups
+- DB response includes `source: "database"` in the API response
+- Freshly generated posts return `source: "generated"`
+
+### 12. Daily Rate Limit
+
+- Trigger rewrites until usage hits 100
+- Server returns 429 with `"Daily post limit reached. Limit: 100"`
+- Extension surfaces the error (rate limit cooldown, no silent break)
+- Usage resets next calendar day
+
+### 13. Popup State Persistence
+
+- Open popup — session loads (mild loading state)
+- Close popup, reopen — no re-fetch of usage from API unless day changed
+- Close popup, reopen — settings and custom prompt persist from session cache
+- Verify in DevTools network tab that `/usage/today` is NOT called on subsequent popup opens
+
+### 14. Popup Profile Link
+
+- Click settings gear → Profile
+- Opens webapp at `http://localhost:3000/dashboard` in new tab
+
+### 15. Extension Toggle On/Off
+
+- Disable extension via the toggle switch
+- All rewritten text restores to original
+- Re-enable — posts rewrite again
+- No double rewriting on re-enable
 
 ## API Checks
 
-These can be validated with the browser, extension logs, or a REST client.
+### `GET /health`
+
+- Returns `{"status":"we cooking"}`
 
 ### `GET /usage/today`
 
-- Confirm it returns:
-  - `used_today`
-  - `remaining_today`
-  - `limit`
-- Confirm `limit` is `100`
-- Confirm values reflect hourly usage, not calendar-day usage
+- Returns `used_today`, `remaining_today`, `limit`
+- `limit` is `100`
+- Values reflect calendar-day usage (midnight-to-midnight), not rolling hour
+- Test at day boundary: usage resets correctly
 
 ### `POST /rewrite`
 
-- Confirm it accepts up to `10` posts in one request
-- Confirm it returns `results`, `processed_count`, `usage_today`, and `remaining_today`
-- Confirm repeated requests for the same post reuse cached content when available
+- Accepts up to 10 posts in one request
+- Returns `results`, `processed_count`, `usage_today`, `remaining_today`
+- Repeated requests for same `(post_url, theme)` reuse DB cached content
+- Theme accepts any string (including hashes for custom themes)
+- `custom_prompt` max 100 chars — server rejects longer with 422
+- Request without `custom_prompt` uses built-in theme explanations
+
+### `POST /admin/cleanup`
+
+- Requires `X-Cron-Secret` header
+- Returns `{"deleted_usage_logs": N, "deleted_posts": N}`
+- Invalid secret returns 401
+- Test by inserting old rows manually, calling endpoint, confirming deletion
 
 ## Regression Checks Before Publish
 
-- Remove or replace all real credentials from local `.env` files
-- Rebuild the extension with the intended production API base URL
-- Confirm `apps/extension/public/manifest.json` does not point at localhost for a production release build
-- Confirm no absolute personal file paths remain in public-facing docs
-- Confirm README language matches current behavior, especially the hourly limit
+- Remove or replace all real credentials from `.env` files
+- Rebuild extension with production `VITE_API_BASE_URL`
+- Confirm `apps/extension/public/manifest.json` does not point at localhost for production
+- Confirm no absolute personal file paths in public-facing docs
+- Confirm README mentions daily limit (100/day), not hourly
+- Confirm `cron_secret` is set in production `.env` and GitHub Secrets
 
 ## Future Automated Tests Worth Adding
 
-- FastAPI route tests for `/health`, `/rewrite`, and `/usage/today`
-- Unit tests for `count_usage_this_hour()` and hourly limit enforcement
-- Unit tests for rewrite normalization and paragraph preservation
-- Browser-level tests for LinkedIn and X content rewriting using Playwright
+- FastAPI route tests for `/health`, `/rewrite`, `/usage/today`, `/admin/cleanup`
+- Unit tests for `count_usage_today()` and daily limit enforcement
+- Unit tests for Groq response parsing and normalization
+- Unit tests for custom theme hash consistency (same input → same hash)
+- Browser-level tests for X/LinkedIn DOM rewriting using Playwright

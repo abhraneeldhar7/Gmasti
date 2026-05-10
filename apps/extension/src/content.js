@@ -18,7 +18,6 @@ const CONCRETE_THEMES = [
 const MESSAGE_TYPES = {
   REWRITE_POSTS: "REWRITE_POSTS",
 };
-const DEBUG_PREFIX = "[Gmasti]";
 const PLATFORM_SELECTORS = {
   x: {
     container: "article",
@@ -42,16 +41,13 @@ const runtimeState = {
   customPromptHash: "",
 };
 
-init().catch((error) => {
-  console.error("Gmasti init failed:", error);
-});
+init().catch(() => {});
 
 async function init() {
   if (!isSupportedHost()) {
     return;
   }
 
-  console.info(`${DEBUG_PREFIX} content script active on`, window.location.hostname, window.location.pathname);
   injectStyles();
   await loadSettings();
 
@@ -71,6 +67,7 @@ async function init() {
     }
 
     if (changes[SETTINGS_STORAGE_KEY]) {
+      const prevTheme = runtimeState.settings.theme;
       runtimeState.settings = {
         ...DEFAULT_SETTINGS,
         ...(changes[SETTINGS_STORAGE_KEY].newValue || {}),
@@ -80,10 +77,13 @@ async function init() {
         : "";
 
       if (!runtimeState.settings.enabled) {
-        restoreOriginalTexts();
+        clearAllGmasti();
+      } else if (runtimeState.settings.theme !== prevTheme) {
+        clearAllGmasti();
+        scheduleScan(50);
+      } else {
+        scheduleScan(50);
       }
-
-      scheduleScan(50);
     }
 
     if (changes[AUTH_STORAGE_KEY]) {
@@ -121,9 +121,7 @@ async function loadSettings() {
 function scheduleScan(delay = 500) {
   clearTimeout(runtimeState.scanTimer);
   runtimeState.scanTimer = window.setTimeout(() => {
-    scanAndRewrite().catch((error) => {
-      console.error("Gmasti scan failed:", error);
-    });
+    scanAndRewrite().catch(() => {});
   }, delay);
 }
 
@@ -162,17 +160,19 @@ async function scanAndRewrite() {
   const missingPosts = [];
 
   for (const post of uncachedPosts) {
+    if (runtimeState.inFlightKeys.has(post.cacheKey)) {
+      continue;
+    }
+
     const cachedEntry = cacheLookup[post.cacheKey];
     if (cachedEntry?.generated) {
       applyReplacement(post.textElement, cachedEntry.generated, post.theme, post.platform);
       continue;
     }
 
-    if (!runtimeState.inFlightKeys.has(post.cacheKey)) {
-      runtimeState.inFlightKeys.add(post.cacheKey);
-      showLoader(post.container);
-      missingPosts.push(post);
-    }
+    runtimeState.inFlightKeys.add(post.cacheKey);
+    showLoader(post.container);
+    missingPosts.push(post);
   }
 
   if (missingPosts.length === 0) {
@@ -219,7 +219,6 @@ async function scanAndRewrite() {
     } else if (error.status === 429) {
       runtimeState.rateLimitCooldownUntil = Date.now() + 300_000;
     }
-    console.warn("Gmasti rewrite skipped:", error.message);
   } finally {
     for (const post of missingPosts) {
       runtimeState.inFlightKeys.delete(post.cacheKey);
@@ -337,14 +336,14 @@ function collectLinkedInPosts() {
     .filter(Boolean);
 }
 
+function isLinkedInFeedPost(container) {
+  const headingText = normalizeText(container.querySelector("h2")?.innerText || "");
+  return headingText === "Feed post";
+}
+
 function findLinkedInTextElement(container) {
   const textElement = container.querySelector(PLATFORM_SELECTORS.linkedin.text);
   return textElement && normalizeText(textElement.innerText) ? textElement : null;
-}
-
-function isLinkedInFeedPost(container) {
-  const headingText = normalizeText(container.querySelector("h2")?.innerText || "");
-  return headingText === "Feed post" && Boolean(findLinkedInTextElement(container));
 }
 
 function findLinkedInPostIdentifier(container) {
@@ -389,27 +388,21 @@ function dedupePosts(posts) {
 function applyReplacement(textElement, generatedText, theme, platform) {
   const displayText = normalizeGeneratedText(generatedText);
 
-  rememberOriginalTextTarget(textElement);
-
   if (textElement.dataset.gmastiGeneratedText === displayText) {
     textElement.dataset.gmastiTheme = theme;
     return;
   }
 
+  rememberOriginalTextTarget(textElement);
+  textElement.dataset.gmastiGeneratedText = displayText;
+  textElement.dataset.gmastiTheme = theme;
   textElement.classList.add("gmasti-swap-out");
 
   window.setTimeout(() => {
     renderTextWithLineBreaks(textElement, displayText);
-    textElement.dataset.gmastiGeneratedText = displayText;
     textElement.classList.remove("gmasti-swap-out");
     textElement.classList.add("gmasti-rewritten-text");
   }, 90);
-
-  textElement.dataset.gmastiTheme = theme;
-}
-
-function applyLinkedInReplacement(textElement, generatedText, theme) {
-  applyReplacement(textElement, generatedText, theme, "linkedin");
 }
 
 function rememberOriginalTextTarget(textElement) {
@@ -438,6 +431,15 @@ function renderTextWithLineBreaks(targetElement, text) {
   targetElement.replaceChildren(fragment);
 }
 
+function clearAllGmasti() {
+  removeAllLoaders();
+  restoreOriginalTexts();
+}
+
+function removeAllLoaders() {
+  document.querySelectorAll(".gmasti-loader").forEach((el) => el.remove());
+}
+
 function restoreOriginalTexts() {
   const rewrittenElements = document.querySelectorAll("[data-gmasti-original-text]");
   for (const element of rewrittenElements) {
@@ -454,7 +456,6 @@ function restoreOriginalTexts() {
     element.classList.remove("gmasti-rewritten-text", "gmasti-swap-out");
     delete element.dataset.gmastiOriginalText;
     delete element.dataset.gmastiGeneratedText;
-    delete element.dataset.gmastiPendingText;
     delete element.dataset.gmastiTheme;
   }
 }

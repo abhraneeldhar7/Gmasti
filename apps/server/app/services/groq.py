@@ -1,5 +1,4 @@
 import json
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from fastapi import HTTPException, status
 from groq import Groq
@@ -8,14 +7,8 @@ from app.config import settings
 
 client = Groq(api_key=settings.groq_api_key)
 
-GROQ_MODEL = "llama-3.1-8b-instant"
-GROQ_CHAR_LIMIT = 8000
-
-# GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
-# GROQ_CHAR_LIMIT = 30000
-# GROQ_MODEL = "llama-3.3-70b-versatile"
-# GROQ_CHAR_LIMIT = 15000
-MAX_WORKERS = 3
+GROQ_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"
+GROQ_CHAR_LIMIT = 30000
 
 THEME_EXPLANATIONS = """
 You rewrite social posts into a requested style.
@@ -76,73 +69,6 @@ def chunk_posts(posts: list[dict], char_limit: int) -> list[list[dict]]:
     return chunks
 
 
-def _call_groq(system_content: str, chunk: list[dict]) -> list[dict]:
-    response = client.chat.completions.create(
-        model=GROQ_MODEL,
-        temperature=0.9,
-        response_format={"type": "json_object"},
-        messages=[
-            {
-                "role": "system",
-                "content": system_content,
-            },
-            {
-                "role": "user",
-                "content": json.dumps(
-                    {
-                        "posts": [
-                            {
-                                "post_url": post["post_url"],
-                                "original": post["original"],
-                                "theme": post["theme"],
-                            }
-                            for post in chunk
-                        ]
-                    },
-                    ensure_ascii=True,
-                ),
-            },
-        ],
-        timeout=settings.request_timeout_seconds,
-    )
-
-    raw_content = response.choices[0].message.content
-
-    try:
-        parsed = json.loads(raw_content)
-        results = parsed["results"]
-    except (json.JSONDecodeError, KeyError, TypeError) as exc:
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Groq returned an invalid JSON payload.",
-        ) from exc
-
-    chunk_lookup = {(post["post_url"], post["theme"]) for post in chunk}
-    normalized_results: list[dict] = []
-
-    for item in results:
-        key = (item.get("post_url"), item.get("theme"))
-        generated = (item.get("generated") or "").strip()
-        if key not in chunk_lookup or not generated:
-            continue
-
-        normalized_results.append(
-            {
-                "post_url": item["post_url"],
-                "theme": item["theme"],
-                "generated": generated,
-            }
-        )
-
-    if len(normalized_results) != len(chunk):
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Groq did not return all rewritten posts.",
-        )
-
-    return normalized_results
-
-
 def generate_rewrites(posts: list[dict], custom_prompt: str | None = None) -> list[dict]:
     if custom_prompt:
         system_content = (
@@ -157,12 +83,72 @@ def generate_rewrites(posts: list[dict], custom_prompt: str | None = None) -> li
             '{"results":[{"post_url":"...","theme":"...","generated":"..."}]}'
         )
 
-    chunks = chunk_posts(posts, GROQ_CHAR_LIMIT)
     all_results: list[dict] = []
 
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-        futures = {executor.submit(_call_groq, system_content, chunk): chunk for chunk in chunks}
-        for future in as_completed(futures):
-            all_results.extend(future.result())
+    for chunk in chunk_posts(posts, GROQ_CHAR_LIMIT):
+        response = client.chat.completions.create(
+            model=GROQ_MODEL,
+            temperature=0.9,
+            response_format={"type": "json_object"},
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_content,
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "posts": [
+                                {
+                                    "post_url": post["post_url"],
+                                    "original": post["original"],
+                                    "theme": post["theme"],
+                                }
+                                for post in chunk
+                            ]
+                        },
+                        ensure_ascii=True,
+                    ),
+                },
+            ],
+            timeout=settings.request_timeout_seconds,
+        )
+
+        raw_content = response.choices[0].message.content
+
+        try:
+            parsed = json.loads(raw_content)
+            results = parsed["results"]
+        except (json.JSONDecodeError, KeyError, TypeError) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Groq returned an invalid JSON payload: {raw_content[:500]}",
+            ) from exc
+
+        chunk_lookup = {(post["post_url"], post["theme"]) for post in chunk}
+        normalized_results: list[dict] = []
+
+        for item in results:
+            key = (item.get("post_url"), item.get("theme"))
+            generated = (item.get("generated") or "").strip()
+            if key not in chunk_lookup or not generated:
+                continue
+
+            normalized_results.append(
+                {
+                    "post_url": item["post_url"],
+                    "theme": item["theme"],
+                    "generated": generated,
+                }
+            )
+
+        if len(normalized_results) != len(chunk):
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"Groq returned {len(normalized_results)} results for {len(chunk)} posts.",
+            )
+
+        all_results.extend(normalized_results)
 
     return all_results

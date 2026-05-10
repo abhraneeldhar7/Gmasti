@@ -1,6 +1,13 @@
 from fastapi import HTTPException, status
 
-DAILY_POST_LIMIT = 100
+PLAN_LIMITS = {
+    "free": 100,
+    "pro": 1000,
+}
+
+
+def get_daily_limit(plan: str) -> int:
+    return PLAN_LIMITS.get(plan, PLAN_LIMITS["free"])
 
 
 def count_usage_today(connection, user_id: str) -> int:
@@ -18,11 +25,11 @@ def count_usage_today(connection, user_id: str) -> int:
         return int(row["total"])
 
 
-def enforce_daily_limit(current_count: int, requested_count: int) -> None:
-    if current_count + requested_count > DAILY_POST_LIMIT:
+def enforce_daily_limit(current_count: int, requested_count: int, limit: int) -> None:
+    if current_count + requested_count > limit:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=f"Daily post limit reached. Limit: {DAILY_POST_LIMIT}",
+            detail=f"Daily post limit reached. Limit: {limit}",
         )
 
 

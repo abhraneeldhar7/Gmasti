@@ -7,13 +7,11 @@ const DEFAULT_SETTINGS = {
   theme: "random",
 };
 const MESSAGE_TYPES = {
-  GET_SETTINGS: "GET_SETTINGS",
   SAVE_SETTINGS: "SAVE_SETTINGS",
   GET_SESSION: "GET_SESSION",
   LOGIN: "LOGIN",
   LOGOUT: "LOGOUT",
   REWRITE_POSTS: "REWRITE_POSTS",
-  REFRESH_USAGE: "REFRESH_USAGE",
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -57,8 +55,6 @@ async function handleMessage(message) {
       return logout();
     case MESSAGE_TYPES.REWRITE_POSTS:
       return rewritePosts(message.payload?.posts ?? []);
-    case MESSAGE_TYPES.REFRESH_USAGE:
-      return getUsageSnapshot(true);
     default:
       throw new Error(`Unsupported message type: ${message.type}`);
   }
@@ -176,7 +172,7 @@ async function incrementRuntimeUsage(count) {
 async function getSessionState() {
   const auth = await getAuthRecord();
   const settings = await getSettings();
-  const usage = await getUsageSnapshot(false);
+  const usage = await getUsageSnapshot(true);
 
   return {
     isAuthenticated: Boolean(auth?.accessToken),

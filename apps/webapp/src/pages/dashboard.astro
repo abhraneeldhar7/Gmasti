@@ -1,44 +1,8 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
-import Dashboard from "@/components/Dashboard";
+import DashboardComponent from "@/components/Dashboard";
 ---
 
 <AppLayout title="Dashboard">
-  <section class="dashboard">
-    <Dashboard client:load />
-  </section>
-
-  <style>
-    .dashboard {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      padding: 2rem;
-    }
-
-    .card {
-      width: min(360px, 100%);
-      border: 1px solid #e5e5e5;
-      border-radius: 24px;
-      padding: 1.5rem;
-      display: grid;
-      gap: 0.5rem;
-      background: #ffffff;
-    }
-
-    .label {
-      margin: 0;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #777777;
-    }
-
-    .value {
-      margin: 0 0 1rem;
-      font-size: 1.05rem;
-      color: #111111;
-      word-break: break-word;
-    }
-  </style>
+  <DashboardComponent client:load />
 </AppLayout>

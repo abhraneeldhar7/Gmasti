@@ -1,6 +1,6 @@
 ---
 import AppLayout from "../layouts/AppLayout.astro";
-import LoginButton from "../components/LoginButton";
+import AuthState from "../components/AuthState";
 import ExtensionPopover from "@/components/ExtensionPopover";
 import bgPattern from "@/assets/bgPattern4.jpg";
 import bgPattern2 from "@/assets/bgPattern3.jpg";
@@ -14,7 +14,7 @@ import TweetStack from "@/components/tweetCards";
 import { ArrowRight } from "lucide-react";
 import popupSS from "@/assets/popupSS.png";
 import customDialog from "@/assets/customDialog.png";
-import Footer from "@/components/footer.astro";
+import Footer from "@/components/Footer.astro";
 ---
 
 <AppLayout title="Gmasti">
@@ -52,10 +52,9 @@ import Footer from "@/components/footer.astro";
           <img src={linkedinLogo.src} class="h-[22px] w-[22px] rounded-[4px]" />
         </p>
         <div class="mt-7 flex gap-2 w-full max-w-[400px]">
-          <Button size="lg" className="flex-1">Log in</Button>
+          <AuthState client:load />
           <Button size="lg" variant="secondary" className="flex-1"
-            ><img src={chromeLogo.src} class="h-[25px] w-[25px]" /> Add to chrome</Button
-          >
+            ><img src={chromeLogo.src} class="h-[25px] w-[25px]" /> Add to chrome</Button>
         </div>
 
         <div class="w-full mt-10">
@@ -121,7 +120,7 @@ import Footer from "@/components/footer.astro";
           />
           <img
             src={customDialog.src}
-            class="rounded-[15px] w-fit object-contain h-[270px]"
+            class="rounded-[15px] w-fit object-contain h-[220px] md:h-[270px]"
           />
         </div>
       </div>
