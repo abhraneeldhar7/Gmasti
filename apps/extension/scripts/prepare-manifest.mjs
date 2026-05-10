@@ -13,7 +13,10 @@ dotenv.config({ path: path.join(extensionRoot, ".env") });
 const templatePath = path.join(__dirname, "manifest.template.json");
 const outputPath = path.join(extensionRoot, "public", "manifest.json");
 
-const apiBaseUrl = process.env.VITE_API_BASE_URL || "http://localhost:8000";
+const apiBaseUrl = process.env.VITE_API_BASE_URL;
+if (!apiBaseUrl) {
+  throw new Error("VITE_API_BASE_URL is required but not set in apps/extension/.env");
+}
 const googleClientId =
   process.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id.apps.googleusercontent.com";
 

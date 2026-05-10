@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     google_client_secret: str
     groq_api_key: str
     request_timeout_seconds: int = 45
+    cron_secret: str = ""
     allow_origin_regex: str = r"^chrome-extension://.*$|^http://localhost(:\d+)?$"
     allowed_web_origins: str = "http://localhost:3000"
 

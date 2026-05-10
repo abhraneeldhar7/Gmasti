@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
     google_sub TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
+    plan TEXT NOT NULL DEFAULT 'free',
     joined TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -28,7 +29,4 @@ CREATE TABLE IF NOT EXISTS usage_logs (
 
 CREATE INDEX IF NOT EXISTS idx_usage_logs_user_time
     ON usage_logs (user_id, occurred_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_posts_platform
-    ON posts (platform);
 

@@ -1,12 +1,27 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
 
 from app.db import get_db
-from app.schemas import AuthResponse, GoogleExchangeRequest, UserResponse
+from app.schemas import UserResponse
 from app.security import create_access_token, get_current_user
 from app.services.google_auth import exchange_google_code, verify_google_id_token
 from app.services.posts import get_or_create_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+class GoogleExchangeRequest(BaseModel):
+    code: str = Field(min_length=10)
+    redirect_uri: str = Field(min_length=10)
+
+
+class AuthResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    expires_at: datetime
+    user: UserResponse
 
 
 @router.post("/google/exchange", response_model=AuthResponse)

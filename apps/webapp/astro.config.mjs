@@ -6,6 +6,9 @@ export default defineConfig({
   integrations: [react()],
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      allowedHosts: ["yearlong-jon-patrilineal.ngrok-free.dev"],
+    },
   },
   server: {
     host: true,

@@ -2,22 +2,153 @@
 import AppLayout from "../layouts/AppLayout.astro";
 import LoginButton from "../components/LoginButton";
 import ExtensionPopover from "@/components/ExtensionPopover";
+import bgPattern from "@/assets/bgPattern4.jpg";
+import bgPattern2 from "@/assets/bgPattern3.jpg";
+import appLogo from "@/assets/appLogo.png";
+import { MAX_LANDING_PAGE_WIDTH } from "@/lib/design";
+import { Button } from "@/components/ui/button";
+import chromeLogo from "@/assets/chromeLogo.png";
+import xLogo from "@/assets/xLogo.jpg";
+import linkedinLogo from "@/assets/linkedinLogo.png";
+import TweetStack from "@/components/tweetCards";
+import { ArrowRight } from "lucide-react";
+import popupSS from "@/assets/popupSS.png";
+import customDialog from "@/assets/customDialog.png";
+import Footer from "@/components/footer.astro";
 ---
 
 <AppLayout title="Gmasti">
-  <section class="landing">
-    <LoginButton client:load />
-    <ExtensionPopover client:load />
-  </section>
+  <div class="relative">
+    <img
+      src={bgPattern2.src}
+      class="h-full w-full z-[-1] absolute top-0 left-0 opacity-15 object-cover"
+    />
+    <div
+      class="min-h-[100svh] w-full pt-14 relative overflow-hidden px-5 md:px-15"
+    >
+      <img
+        src={bgPattern.src}
+        class="absolute z-[-1] top-0 left-0 w-full h-full object-cover"
+      />
 
+      <div
+        class="flex flex-col items-center mx-auto"
+        style={{ maxWidth: MAX_LANDING_PAGE_WIDTH + "px" }}
+      >
+        <img src={appLogo.src} class="h-[100px] w-[100px]" />
 
-  <style>
-    .landing {
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      gap: 0.75rem;
-      padding: 2rem;
-    }
-  </style>
+        <h1
+          class="text-[white] text-[50px] leading-[1.4em] mt-6 font-[Instrument] text-center"
+        >
+          Make internet scrollable again
+        </h1>
+
+        <p class="text-[white] text-center text-[18px] mt-3">
+          Re-write your timeline to your imaginations.
+        </p>
+        <p class="text-[white] text-[18px] mt-2 flex items-center gap-2">
+          Works with
+          <img src={xLogo.src} class="h-[22px] w-[22px] rounded-[4px]" />
+          <img src={linkedinLogo.src} class="h-[22px] w-[22px] rounded-[4px]" />
+        </p>
+        <div class="mt-7 flex gap-2 w-full max-w-[400px]">
+          <Button size="lg" className="flex-1">Log in</Button>
+          <Button size="lg" variant="secondary" className="flex-1"
+            ><img src={chromeLogo.src} class="h-[25px] w-[25px]" /> Add to chrome</Button
+          >
+        </div>
+
+        <div class="w-full mt-10">
+          <TweetStack client:load />
+        </div>
+      </div>
+    </div>
+
+    <div class="px-5 md:px-15 mt-20">
+      <div
+        class="mx-auto w-full flex flex-col md:items-end md:flex-row gap-5 md:gap-10"
+        style={{ maxWidth: MAX_LANDING_PAGE_WIDTH + "px" }}
+      >
+        <div class="md:flex-1">
+          <h2 class="text-[30px] font-[600]">Your timeline should be yours</h2>
+          <p class="mt-2 text-muted-foreground text-[17px]">
+            Apply any theme you want to your timelines and make linkedin
+            scrollable again. All posts are re-written to your heart's desire.
+          </p>
+          <p class="text-foreground text-[17px]">
+            Because the internet can be boring.
+          </p>
+        </div>
+
+        <div
+          class="md:flex-1 rounded-[15px] h-[300px] md:h-[400px] relative overflow-hidden flex items-end justify-center pt-10"
+        >
+          <img
+            src={bgPattern2.src}
+            class="absolute z-[-1] top-0 left-0 w-full h-full object-cover"
+          />
+          <img
+            src={popupSS.src}
+            class="rounded-t-[15px] object-contain w-fit h-full"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="px-5 md:px-15 mt-15 md:mt-30">
+      <div
+        class="mx-auto w-full flex flex-col md:items-end md:flex-row-reverse gap-5 md:gap-10"
+        style={{ maxWidth: MAX_LANDING_PAGE_WIDTH + "px" }}
+      >
+        <div class="md:flex-1">
+          <h2 class="text-[30px] font-[600]">Add custom themes</h2>
+          <p class="mt-2 text-muted-foreground text-[17px]">
+            Re-imagine your timeline and make your feed fun again with custom
+            themes, allowing you to pump out wacky ideas on the go. Best part is
+            when you forget it's turned on.
+          </p>
+          <p class="text-foreground text-[17px]">
+            Custom themes charge 2x usage than regular ones.
+          </p>
+        </div>
+
+        <div
+          class="md:flex-1 rounded-[15px] h-[300px] md:h-[400px] relative overflow-hidden flex items-center justify-center"
+        >
+          <img
+            src={bgPattern2.src}
+            class="absolute z-[-1] top-0 left-0 w-full h-full object-cover"
+          />
+          <img
+            src={customDialog.src}
+            class="rounded-[15px] w-fit object-contain h-[270px]"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="px-5 md:px-15 mt-15 md:mt-30">
+      <div
+        class="mx-auto w-full flex flex-col items-center"
+        style={{ maxWidth: MAX_LANDING_PAGE_WIDTH + "px" }}
+      >
+        <h2 class="text-[50px] leading-[1.4em] font-[Instrument] text-center">
+          Is it safe?
+        </h2>
+
+        <p class="mt-2 text-center max-w-[500px] mx-auto">
+          Yes, it's safe. Gmasti is open sourced and we highly encuorage users
+          to look up the code, self-host it, or just ask claude/codex to run a
+          security check on the repo.
+        </p>
+        <a href="/oss" class="w-fit mt-4">
+          <Button>
+            Read Guide <ArrowRight />
+          </Button>
+        </a>
+      </div>
+    </div>
+
+    <Footer />
+  </div>
 </AppLayout>

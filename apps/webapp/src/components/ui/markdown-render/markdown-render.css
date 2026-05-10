@@ -1,0 +1,560 @@
+/* Paragraphs */
+.markdownDiv {
+    word-break: break-word;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: #6b7280;
+}
+
+.markdownDiv p {
+    line-height: 2;
+    margin: 0 0 0.9em;
+}
+
+
+/* Headers */
+.markdownDiv h1 {
+    color: #111827;
+    font-size: 2.2em;
+    font-weight: 550;
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    margin: 1.35em 0 0.42em;
+}
+
+.markdownDiv h2 {
+    color: #111827;
+    font-size: 2em;
+    font-weight: 540;
+    line-height: 1.16;
+    letter-spacing: -0.03em;
+    margin: 1.45em 0 0.48em;
+}
+
+.markdownDiv h3 {
+    color: #111827;
+    font-size: 1.8em;
+    font-weight: 530;
+    line-height: 1.22;
+    letter-spacing: -0.022em;
+    margin: 1.4em 0 0.5em;
+}
+
+.markdownDiv h4 {
+    font-size: 1.6em;
+    font-weight: 525;
+    line-height: 1.3;
+    letter-spacing: -0.015em;
+    margin: 1.25em 0 0.45em;
+}
+
+.markdownDiv h5 {
+    font-size: 1.4em;
+    font-weight: 525;
+    line-height: 1.35;
+    margin: 1.15em 0 0.4em;
+}
+
+.markdownDiv h6 {
+    font-size: 1.2em;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    margin: 1em 0 0.35em;
+}
+
+.markdownDiv h1:first-child,
+.markdownDiv h2:first-child,
+.markdownDiv h3:first-child,
+.markdownDiv h4:first-child,
+.markdownDiv h5:first-child,
+.markdownDiv h6:first-child {
+    margin-top: 0;
+}
+
+.markdownDiv h1+p,
+.markdownDiv h2+p,
+.markdownDiv h3+p,
+.markdownDiv h4+p,
+.markdownDiv h5+p,
+.markdownDiv h6+p {
+    margin-top: 0;
+}
+
+/* Horizontal Rule */
+.markdownDiv hr {
+    height: 0px;
+    margin: 30px 0;
+    opacity: 0.4;
+    border: 1px solid #e5e5e7;
+}
+
+/* Lists */
+.markdownDiv ul {
+    list-style-type: disc;
+    padding-left: 1.5em;
+    margin: 0 0 1.1em;
+}
+
+.markdownDiv ul ul {
+    list-style-type: circle;
+    margin: 0.5em 0;
+}
+
+.markdownDiv ul ul ul {
+    list-style-type: square;
+}
+
+.markdownDiv ol {
+    list-style-type: decimal;
+    padding-left: 1.5em;
+    margin: 0 0 1.1em;
+}
+
+.markdownDiv ol ol {
+    list-style-type: lower-alpha;
+    margin: 0.5em 0;
+}
+
+.markdownDiv ol ol ol {
+    list-style-type: lower-roman;
+}
+
+.markdownDiv li {
+    margin-bottom: 0.45em;
+    line-height: 1.8;
+}
+
+.markdownDiv li>p {
+    margin-bottom: 0.5em;
+}
+
+.markdownDiv li>ul,
+.markdownDiv li>ol {
+    margin-top: 0.5em;
+}
+
+/* Blockquotes */
+.markdownDiv blockquote {
+    border-left: 2px solid #3b82f6;
+    padding: 10px 12px 10px 1rem;
+    margin: 1.5em 0;
+    color: #111827;
+    background: #f3f4f6;
+    border-top-right-radius: 6px;
+    border-bottom-right-radius: 6px;
+    font-style: normal;
+}
+
+.markdownDiv blockquote p {
+    margin-bottom: 0.55em;
+}
+
+.markdownDiv blockquote p:last-child {
+    margin-bottom: 0;
+}
+
+/* Links */
+.markdownDiv a {
+    color: #111827 !important;
+    text-decoration: underline !important;
+    text-underline-offset: 4px;
+    transition: color 0.2s ease;
+}
+
+.markdownDiv a:hover {
+    color: #6b7280 !important;
+}
+
+.markdownDiv a strong {
+    font-weight: 600;
+    color: #111827;
+}
+
+
+
+/* Inline Code */
+.markdownDiv :not(pre)>code {
+    font-size: 0.85em;
+    font-weight: 500 !important;
+    background-color: #f3f4f6 !important;
+    color: #111827 !important;
+    padding: 0.35em 0.6em;
+    border-radius: 4px;
+    margin: 1.5em 0;
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+}
+
+.markdownHidden {
+    display: none;
+}
+
+
+/* Block Code */
+
+.markdownCopyButton {
+    position: static;
+    z-index: 2;
+    padding: 8px;
+    border-radius: 5px;
+    background-color: transparent;
+    color: #6b7280;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.markdownCopyButton:hover,
+.markdownCopyButton:focus-visible {
+    background-color: #6b7280;
+    color: #111827;
+}
+
+@media (min-width: 768px) {
+    .markdownCopyButton {
+        opacity: 1;
+    }
+
+    .markdownCodeBlock:hover .markdownCopyButton,
+    .markdownCodeBlock .markdownCopyButton:focus-visible {
+        opacity: 1;
+    }
+}
+
+.markdownDiv .markdownCodeBlock {
+    position: relative;
+    margin: 1.5em 0;
+    border-radius: 12px;
+    border: 1px solid #e5e5e7;
+    overflow: hidden;
+    padding: 3px;
+    padding-top: 1px;
+    background-color: #f3f4f6;
+}
+
+.markdownCodeBlockHeader {
+    padding: 4px 0.5em;
+    padding-left: 0.7em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.markdownCodeBlockLanguage {
+    font-size: 0.9em;
+    line-height: 1em;
+    font-weight: 500;
+}
+
+.markdownCodeBlockActions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.markdownDiv .markdownCodeBlock .shiki {
+    font-size: 0.9em;
+    border-radius: 9px !important;
+    padding: 0.8em 1.2em !important;
+    max-height: 300px;
+    overflow: auto !important;
+    scrollbar-width: none !important;
+    margin: 0 !important;
+    font-weight: 500 !important;
+}
+
+.markdownDiv pre::-webkit-scrollbar {
+    display: none !important;
+}
+
+
+
+
+
+/* Highlighted Text */
+
+.markdownDiv .highlight {
+    background-color: #3b82f6 !important;
+    color: #ffffff;
+    padding: 5px;
+    font-weight: 450;
+    border-radius: 3px;
+}
+
+/* Emphasis */
+.markdownDiv em {
+    font-style: italic;
+}
+
+.markdownDiv strong {
+    font-weight: 600;
+    color: #111827;
+}
+
+/* Tables */
+.markdownTableScrollArea {
+    width: 100%;
+    overflow: auto !important;
+    scrollbar-width: none !important;
+    border: 1px solid #e5e5e7;
+    border-radius: 8px;
+}
+
+.markdownDiv table {
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-bottom: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    width: max-content;
+    min-width: 100%;
+}
+
+.markdownTable {
+    min-width: 100%;
+}
+
+.markdownDiv th {
+    background-color: #f9fafb !important;
+    color: #111827 !important;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e5e5e7 !important;
+    border-right: 1px solid #e5e5e7 !important;
+    transition: all 0.25s ease-in-out;
+    max-width: 150px;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.markdownDiv th:last-child {
+    border-right: none !important;
+}
+
+.markdownDiv table {
+    background-color: transparent;
+}
+
+.markdownDiv td {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e5e5e7 !important;
+    border-right: 1px solid #e5e5e7 !important;
+    color: #111827 !important;
+    background-color: transparent !important;
+    transition: all 0.25s ease-in-out;
+    max-width: 200px;
+    font-size: 15px;
+    white-space: normal;
+    word-break: normal;
+    overflow-wrap: break-word;
+}
+
+.markdownDiv td:last-child {
+    border-right: none !important;
+}
+
+.markdownDiv tr:last-child td {
+    border-bottom: none !important;
+}
+
+.markdownDiv tr:hover td {
+    background-color: #f3f4f6 !important;
+}
+
+/* Task Lists */
+.markdownDiv input[type="checkbox"] {
+    margin-right: 0.5em;
+    transform: scale(1.2);
+    accent-color: #3b82f6;
+}
+
+.markdownDiv ul.contains-task-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.markdownDiv ul.contains-task-list li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.75em;
+}
+
+.markdownDiv ul.contains-task-list li input[type="checkbox"] {
+    margin-top: 0.3em;
+    margin-right: 0.75em;
+    flex-shrink: 0;
+}
+
+.markdownDiv ul.contains-task-list li>p {
+    margin-bottom: 0;
+}
+
+/* Images */
+.markdownDiv img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1.5em 0;
+}
+
+.markdownDiv img+em {
+    display: block;
+    text-align: center;
+    font-size: 0.9em;
+    color: #111827;
+    margin-top: -1em;
+    margin-bottom: 1.5em;
+    opacity: 0.8;
+}
+
+/* Keyboard Input */
+.markdownDiv kbd {
+    background-color: #f3f4f6;
+    border: 1px solid #e5e5e7;
+    border-radius: 4px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    color: #111827;
+    font-size: 0.85em;
+    padding: 0.2em 0.4em;
+    white-space: nowrap;
+}
+
+/* Subscript and Superscript */
+.markdownDiv sub,
+.markdownDiv sup {
+    font-size: 0.75em;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+}
+
+.markdownDiv sup {
+    top: -0.5em;
+}
+
+.markdownDiv sub {
+    bottom: -0.25em;
+}
+
+/* Definition Lists */
+.markdownDiv dl {
+    margin: 1.5em 0;
+}
+
+.markdownDiv dt {
+    font-weight: 600;
+    margin-top: 1em;
+}
+
+.markdownDiv dd {
+    margin-left: 1.5em;
+    margin-bottom: 0.5em;
+}
+
+/* Abbreviations */
+.markdownDiv abbr[title] {
+    border-bottom: 1px dotted #e5e5e7;
+    cursor: help;
+    text-decoration: none;
+}
+
+
+/* Nested content spacing */
+.markdownDiv>*:first-child {
+    margin-top: 0;
+}
+
+.markdownDiv>*:last-child {
+    margin-bottom: 0;
+}
+
+/* Mobile optimizations */
+@media (max-width: 600px) {
+    .markdownDiv {
+        font-size: 16px;
+    }
+
+    /* Headers */
+    .markdownDiv h1 {
+        color: #111827;
+        font-size: 2em;
+        font-weight: 550;
+        line-height: 1.12;
+        letter-spacing: -0.035em;
+        margin: 1.35em 0 0.42em;
+    }
+
+    .markdownDiv h2 {
+        color: #111827;
+        font-size: 1.8em;
+    }
+
+    .markdownDiv h3 {
+        color: #111827;
+        font-size: 1.6em;
+    }
+
+    .markdownDiv h4 {
+        font-size: 1.4em;
+    }
+
+    .markdownDiv h5 {
+        font-size: 1.2em;
+    }
+
+    .markdownDiv h6 {
+        font-size: 1.1em;
+    }
+
+}
+
+/* Print styles */
+@media print {
+
+    h1,
+    p,
+    .markdownDiv,
+    .markdownDiv h1,
+    .markdownDiv h2,
+    .markdownDiv h3,
+    .markdownDiv h4,
+    .markdownDiv h5,
+    .markdownDiv h6,
+    .markdownDiv blockquote,
+    table {
+        color: #000 !important;
+    }
+
+    .markdownDiv a {
+        color: #000 !important;
+        text-decoration: underline;
+    }
+
+    .markdownDiv pre {
+        background-color: #f5f5f5 !important;
+        border: 1px solid #ddd;
+        color: #000000 !important;
+    }
+
+    .markdownDiv pre code {
+        color: #000000 !important;
+    }
+
+    .markdownDiv code {
+        background-color: #f5f5f5 !important;
+        color: #000000 !important;
+    }
+
+    .markdownDiv table,
+    .markdownDiv th,
+    .markdownDiv td {
+        color: #000000 !important;
+    }
+}

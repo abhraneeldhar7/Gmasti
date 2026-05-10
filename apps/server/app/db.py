@@ -1,17 +1,19 @@
 from contextlib import contextmanager
 
-import psycopg
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 from .config import settings
+
+pool = ConnectionPool(
+    settings.database_url,
+    min_size=1,
+    max_size=10,
+    kwargs={"row_factory": dict_row},
+)
 
 
 @contextmanager
 def get_db():
-    with psycopg.connect(
-        settings.database_url,
-        row_factory=dict_row,
-        autocommit=False,
-    ) as connection:
+    with pool.connection() as connection:
         yield connection
-

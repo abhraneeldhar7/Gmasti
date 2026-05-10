@@ -2,7 +2,8 @@ const SETTINGS_STORAGE_KEY = "gmasti_settings";
 const AUTH_STORAGE_KEY = "gmasti_auth";
 const CACHE_KEY_PREFIX = "gmasti_cache";
 const MAX_POSTS_PER_WINDOW = 10;
-const EXTRA_POSTS_BELOW = 5;
+const EXTRA_POSTS_BELOW = 3;
+const MAX_CACHE_ENTRIES = 500;
 const DEFAULT_SETTINGS = {
   enabled: true,
   theme: "random",
@@ -38,6 +39,7 @@ const runtimeState = {
   originalTextTargets: new WeakMap(),
   authCooldownUntil: 0,
   rateLimitCooldownUntil: 0,
+  customPromptHash: "",
 };
 
 init().catch((error) => {
@@ -53,11 +55,15 @@ async function init() {
   injectStyles();
   await loadSettings();
 
-  window.addEventListener("scroll", () => scheduleScan(120), { passive: true });
-  window.addEventListener("resize", () => scheduleScan(150));
+  window.addEventListener("scroll", () => scheduleScan(500), { passive: true });
+  window.addEventListener("resize", () => scheduleScan(500));
 
-  const observer = new MutationObserver(() => scheduleScan(250));
-  observer.observe(document.body, { childList: true, subtree: true });
+  const observer = new MutationObserver((mutations) => {
+    if (mutations.some((m) => !isGmastiMutation(m))) {
+      scheduleScan(500);
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true, attributes: false });
 
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName !== "local") {
@@ -69,6 +75,9 @@ async function init() {
         ...DEFAULT_SETTINGS,
         ...(changes[SETTINGS_STORAGE_KEY].newValue || {}),
       };
+      runtimeState.customPromptHash = runtimeState.settings.custom_prompt
+        ? simpleHash(runtimeState.settings.custom_prompt)
+        : "";
 
       if (!runtimeState.settings.enabled) {
         restoreOriginalTexts();
@@ -87,15 +96,29 @@ async function init() {
   scheduleScan(400);
 }
 
+function isGmastiMutation(mutation) {
+  if (mutation.type === "attributes") {
+    return false;
+  }
+  const target = mutation.target;
+  if (target && target.closest) {
+    return !!target.closest(".gmasti-rewritten-text, .gmasti-loader, [data-gmasti-original-text]");
+  }
+  return false;
+}
+
 async function loadSettings() {
   const stored = await chrome.storage.local.get(SETTINGS_STORAGE_KEY);
   runtimeState.settings = {
     ...DEFAULT_SETTINGS,
     ...(stored[SETTINGS_STORAGE_KEY] || {}),
   };
+  runtimeState.customPromptHash = runtimeState.settings.custom_prompt
+    ? simpleHash(runtimeState.settings.custom_prompt)
+    : "";
 }
 
-function scheduleScan(delay = 120) {
+function scheduleScan(delay = 500) {
   clearTimeout(runtimeState.scanTimer);
   runtimeState.scanTimer = window.setTimeout(() => {
     scanAndRewrite().catch((error) => {
@@ -127,10 +150,18 @@ async function scanAndRewrite() {
     };
   });
 
-  const cacheLookup = await chrome.storage.local.get(themedPosts.map((post) => post.cacheKey));
+  const uncachedPosts = themedPosts.filter(
+    (post) => !post.textElement.dataset.gmastiGeneratedText
+  );
+
+  if (uncachedPosts.length === 0) {
+    return;
+  }
+
+  const cacheLookup = await chrome.storage.local.get(uncachedPosts.map((post) => post.cacheKey));
   const missingPosts = [];
 
-  for (const post of themedPosts) {
+  for (const post of uncachedPosts) {
     const cachedEntry = cacheLookup[post.cacheKey];
     if (cachedEntry?.generated) {
       applyReplacement(post.textElement, cachedEntry.generated, post.theme, post.platform);
@@ -170,6 +201,7 @@ async function scanAndRewrite() {
 
     if (Object.keys(cacheWrites).length > 0) {
       await chrome.storage.local.set(cacheWrites);
+      pruneCache();
     }
 
     for (const post of missingPosts) {
@@ -194,6 +226,19 @@ async function scanAndRewrite() {
       hideLoader(post.container);
     }
   }
+}
+
+async function pruneCache() {
+  const all = await chrome.storage.local.get(null);
+  const cacheEntries = Object.entries(all).filter(([key]) => key.startsWith(CACHE_KEY_PREFIX));
+
+  if (cacheEntries.length <= MAX_CACHE_ENTRIES) {
+    return;
+  }
+
+  cacheEntries.sort((a, b) => (a[1]?.savedAt || 0) - (b[1]?.savedAt || 0));
+  const toRemove = cacheEntries.slice(0, cacheEntries.length - MAX_CACHE_ENTRIES).map(([key]) => key);
+  await chrome.storage.local.remove(toRemove);
 }
 
 function collectWindowPosts() {
@@ -376,10 +421,6 @@ function rememberOriginalTextTarget(textElement) {
   }
 }
 
-function applyLinkedInReplacement(textElement, generatedText, theme) {
-  applyReplacement(textElement, generatedText, theme, "linkedin");
-}
-
 function renderTextWithLineBreaks(targetElement, text) {
   const fragment = document.createDocumentFragment();
   const lines = text.split("\n");
@@ -455,6 +496,7 @@ function injectStyles() {
       background: rgba(15, 23, 42, 0.92);
       color: #f8fafc;
       padding: 4px 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 0.02em;
@@ -464,14 +506,6 @@ function injectStyles() {
     .gmasti-rewritten-text {
       transition: opacity 160ms ease;
       white-space: pre-wrap;
-    }
-
-    .gmasti-linkedin-generated-text {
-      white-space: pre-wrap;
-    }
-
-    .gmasti-linkedin-preserved-control {
-      margin-left: 0.25em;
     }
 
     .gmasti-swap-out {
@@ -497,6 +531,10 @@ function makeCacheKey(platform, postUrl, theme) {
 }
 
 function resolveTheme(postUrl, selectedTheme) {
+  if (selectedTheme === "custom") {
+    return runtimeState.customPromptHash || "custom";
+  }
+
   if (selectedTheme !== "random") {
     return selectedTheme;
   }

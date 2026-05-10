@@ -1,0 +1,54 @@
+---
+import { MAX_LANDING_PAGE_WIDTH } from "@/lib/design";
+import appLogo from "@/assets/appLogo.png";
+
+const links = [
+    { label: "Home", href: "/" },
+    { label: "Open sourced", href: "/oss" },
+    { label: "Contact", href: "/contact" },
+    { label: "Privacy policy", href: "/privacy-policy" },
+    { label: "About", href: "/about" },
+    { label: "Terms of service", href: "/terms-of-service" },
+];
+
+import footerImg from "@/assets/footerImg.png";
+---
+
+<div class="px-5 md:px-15 mt-20">
+    <div
+        class="mx-auto w-full flex flex-col"
+        style={{ madWidth: MAX_LANDING_PAGE_WIDTH + "px" }}
+    >
+        <div
+            class="flex items-start md:justify-between flex-col md:flex-row gap-6"
+        >
+            <a href="/" class="flex items-center gap-3">
+                <img src={appLogo.src} class="h-[26px] w-[26px]" />
+                <p class="text-[17px]">Gmasti</p>
+            </a>
+
+            <div
+                class="grid grid-cols-2 space-y-3 space-x-4 justify-between w-full md:w-fit"
+            >
+                {
+                    links.map((link) => (
+                        <a
+                            href={link.href}
+                            class="text-[14px] transition-all duration-300 text-muted-foreground hover:text-foreground"
+                        >
+                            {link.label}
+                        </a>
+                    ))
+                }
+            </div>
+        </div>
+
+        <div class="relative overflow-hidden pt-15 flex justify-center w-full">
+            <img src={footerImg.src} class="h-[250px] w-fit object-contain" />
+            <div
+                class="bg-gradient-to-t h-[140px] w-full absolute bottom-[-3px] left-0 from-background from-0% to-transparent to-100% z-3"
+            >
+            </div>
+        </div>
+    </div>
+</div>

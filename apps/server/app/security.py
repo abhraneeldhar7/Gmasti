@@ -56,7 +56,7 @@ def get_current_user(
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT user_id, email, name, joined
+                SELECT user_id, email, name, plan, joined
                 FROM users
                 WHERE user_id = %s
                 """,

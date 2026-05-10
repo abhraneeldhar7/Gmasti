@@ -13,9 +13,14 @@ const MESSAGE_TYPES = {
   LOGIN: "LOGIN",
   LOGOUT: "LOGOUT",
   REWRITE_POSTS: "REWRITE_POSTS",
+  REFRESH_USAGE: "REFRESH_USAGE",
 };
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+if (!API_BASE_URL) {
+  throw new Error("VITE_API_BASE_URL is required but not set in apps/extension/.env");
+}
+
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
 chrome.runtime.onInstalled.addListener(async () => {
@@ -52,6 +57,8 @@ async function handleMessage(message) {
       return logout();
     case MESSAGE_TYPES.REWRITE_POSTS:
       return rewritePosts(message.payload?.posts ?? []);
+    case MESSAGE_TYPES.REFRESH_USAGE:
+      return getUsageSnapshot(true);
     default:
       throw new Error(`Unsupported message type: ${message.type}`);
   }
@@ -87,15 +94,19 @@ async function clearAuthRecord() {
   await chrome.storage.local.remove(AUTH_STORAGE_KEY);
 }
 
+function getDefaultUsage() {
+  return {
+    usedToday: 0,
+    remainingToday: DAILY_LIMIT,
+    limit: DAILY_LIMIT,
+    isSynced: false,
+  };
+}
+
 async function getUsageSnapshot(forceRefresh = false) {
   const auth = await getAuthRecord();
   if (!auth?.accessToken) {
-    return {
-      usedToday: 0,
-      remainingToday: DAILY_LIMIT,
-      limit: DAILY_LIMIT,
-      isSynced: false,
-    };
+    return getDefaultUsage();
   }
 
   const dayKey = new Date().toISOString().slice(0, 10);
@@ -112,24 +123,37 @@ async function getUsageSnapshot(forceRefresh = false) {
     };
   }
 
-  const response = await authenticatedFetch("/usage/today");
-  const usage = await response.json();
+  try {
+    const response = await authenticatedFetch("/usage/today");
+    const usage = await response.json();
 
-  await chrome.storage.session.set({
-    [USAGE_SESSION_KEY]: {
-      dayKey,
-      syncedUsedToday: usage.used_today,
-      runtimeUsedCount: 0,
+    await chrome.storage.session.set({
+      [USAGE_SESSION_KEY]: {
+        dayKey,
+        syncedUsedToday: usage.used_today,
+        runtimeUsedCount: 0,
+        limit: usage.limit,
+      },
+    });
+
+    return {
+      usedToday: usage.used_today,
+      remainingToday: usage.remaining_today,
       limit: usage.limit,
-    },
-  });
-
-  return {
-    usedToday: usage.used_today,
-    remainingToday: usage.remaining_today,
-    limit: usage.limit,
-    isSynced: true,
-  };
+      isSynced: true,
+    };
+  } catch {
+    if (snapshot && snapshot.dayKey === dayKey) {
+      const total = snapshot.syncedUsedToday + snapshot.runtimeUsedCount;
+      return {
+        usedToday: total,
+        remainingToday: Math.max(0, snapshot.limit - total),
+        limit: snapshot.limit,
+        isSynced: false,
+      };
+    }
+    return getDefaultUsage();
+  }
 }
 
 async function incrementRuntimeUsage(count) {
@@ -249,8 +273,7 @@ async function rewritePosts(posts) {
   });
 
   const data = await response.json();
-  const multiplier = settings.theme === "custom" ? 2 : 1;
-  await incrementRuntimeUsage((data.processed_count || 0) * multiplier);
+  incrementRuntimeUsage(data.processed_count || 0);
   return data;
 }
 

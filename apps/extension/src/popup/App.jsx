@@ -3,13 +3,13 @@ import appLogo from "./assets/appLogo.png";
 import googleLogo from "./assets/googleLogo.png";
 import { ModeSwitch } from "./components/modeSwitch";
 import { Button } from "./components/ui/button";
-import { ChevronDown, LogOutIcon, PencilIcon, Scroll, SettingsIcon, UserRound } from "lucide-react";
+import { ChevronDown, LogOutIcon, PencilIcon, SettingsIcon, UserRound } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
 import { Dialog, DialogClose, DialogContent, DialogFooter, DialogTrigger } from "./components/ui/dialog";
 import { Textarea } from "./components/ui/textarea";
 
 import { Progress } from "./components/ui/progress";
-import { ScrollArea, ScrollBar } from "./components/ui/scroll-area";
+import { ScrollArea } from "./components/ui/scroll-area";
 
 const DEFAULT_SETTINGS = {
   enabled: true,
@@ -22,7 +22,10 @@ const MESSAGE_TYPES = {
   GET_SESSION: "GET_SESSION",
   LOGIN: "LOGIN",
   LOGOUT: "LOGOUT",
+  REFRESH_USAGE: "REFRESH_USAGE",
 };
+
+const MAX_CUSTOM_PROMPT_LENGTH = 100;
 
 const THEME_OPTIONS = [
   { value: "random", label: "Random" },
@@ -33,13 +36,18 @@ const THEME_OPTIONS = [
   { value: "hood_lingo", label: "Hood Lingo" },
 ];
 
-const WEBAPP_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+const WEBAPP_BASE = import.meta.env.VITE_API_BASE_URL;
+if (!WEBAPP_BASE) {
+  throw new Error("VITE_API_BASE_URL is required but not set in apps/extension/.env");
+}
 
 export default function App() {
   const [session, setSession] = useState(null);
   const [settings, setSettings] = useState(DEFAULT_SETTINGS);
   const [status, setStatus] = useState({ loading: true, message: "" });
   const [customPrompt, setCustomPrompt] = useState("");
+  const [popoverOpen, setPopoverOpen] = useState(false);
+  const [customDialogOpen, setCustomDialogOpen] = useState(false);
 
   useEffect(() => {
     refresh().catch((error) => {
@@ -59,6 +67,19 @@ export default function App() {
       setCustomPrompt(savedSettings.custom_prompt);
     }
     setStatus({ loading: false, message: "" });
+
+    refreshUsage();
+  }
+
+  async function refreshUsage() {
+    try {
+      const fresh = await sendMessage(MESSAGE_TYPES.REFRESH_USAGE);
+      setSession((current) =>
+        current ? { ...current, usage: fresh } : current,
+      );
+    } catch {
+      // silent
+    }
   }
 
   async function handleLogin() {
@@ -87,6 +108,17 @@ export default function App() {
   function handleSaveCustom() {
     if (!customPrompt.trim()) return;
     updateSettings({ theme: "custom", custom_prompt: customPrompt.trim() });
+    setCustomDialogOpen(false);
+    setPopoverOpen(false);
+  }
+
+  function handleCustomClick() {
+    if (customPrompt.trim()) {
+      updateSettings({ theme: "custom" });
+      setPopoverOpen(false);
+    } else {
+      setCustomDialogOpen(true);
+    }
   }
 
   const themeLabel =
@@ -110,8 +142,8 @@ export default function App() {
 
       <div className="mt-6">
         <ModeSwitch
-          checked={settings.enabled}
-          disabled={!isAuthenticated}
+          checked={isAuthenticated ? settings.enabled : false}
+          disabled={!isAuthenticated || status.loading}
           onCheckedChange={(checked) => updateSettings({ enabled: checked })}
         />
       </div>
@@ -119,7 +151,7 @@ export default function App() {
       {isAuthenticated ? (
         <>
           <div className="mt-6 w-full">
-            <Popover>
+            <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button variant="secondary" size="lg" className="w-full justify-between border">
                   <ChevronDown className="opacity-0" />
@@ -135,35 +167,52 @@ export default function App() {
                         key={theme.value}
                         variant={settings.theme === theme.value ? "outline" : "ghost"}
                         className="w-full"
-                        onClick={() => updateSettings({ theme: theme.value })}
+                        onClick={() => {
+                          updateSettings({ theme: theme.value });
+                          setPopoverOpen(false);
+                        }}
                       >
                         {theme.label}
                       </Button>
                     ))}
 
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="secondary">
-                          <PencilIcon /> Custom
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent showCloseButton={false}>
-                        <Textarea
-                          className="h-[150px]"
-                          placeholder="Describe how you want posts to be rewritten..."
-                          value={customPrompt}
-                          onChange={(e) => setCustomPrompt(e.target.value)}
-                        />
-                        <DialogFooter>
-                          <DialogClose asChild className="md:flex-1">
-                            <Button variant="outline">Cancel</Button>
-                          </DialogClose>
-                          <Button className="md:flex-1" onClick={handleSaveCustom}>
-                            Save
+                    <div className="flex gap-[3px]">
+                      <Button
+                        variant={settings.theme === "custom" ? "outline" : "secondary"}
+                        className="flex-1"
+                        onClick={handleCustomClick}
+                      >
+                        Custom
+                      </Button>
+                      <Dialog open={customDialogOpen} onOpenChange={setCustomDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button variant="secondary" size="icon">
+                            <PencilIcon />
                           </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                        </DialogTrigger>
+                        <DialogContent showCloseButton={false}>
+                          <Textarea
+                            className="h-[150px]"
+                            placeholder="Describe how you want posts to be rewritten... (max 100 characters)"
+                            value={customPrompt}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              if (val.length <= MAX_CUSTOM_PROMPT_LENGTH) {
+                                setCustomPrompt(val);
+                              }
+                            }}
+                          />
+                          <DialogFooter>
+                            <DialogClose asChild className="md:flex-1">
+                              <Button variant="outline">Cancel</Button>
+                            </DialogClose>
+                            <Button className="md:flex-1" onClick={handleSaveCustom}>
+                              Save
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
                 </ScrollArea>
               </PopoverContent>
@@ -240,6 +289,7 @@ export default function App() {
           variant="ghost"
           size="lg"
           className="bg-background mt-7 gap-2 shadow-xs w-full"
+          disabled={status.loading}
           onClick={handleLogin}
         >
           <img src={googleLogo} className="w-[24px] h-[24px]" alt="Google" />
