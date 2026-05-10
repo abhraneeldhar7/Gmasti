@@ -27,17 +27,20 @@ async def razorpay_webhook(request: Request):
 
     secret = settings.razorpay_webhook_secret.encode("utf-8")
     expected = hmac.new(secret, body, hashlib.sha256).hexdigest()
-    computed = f"sha256={expected}"
+
+    received_sig = signature
+    if received_sig.startswith("sha256="):
+        received_sig = received_sig[7:]
 
     logger.info(
-        "Webhook: received_sig=%s computed_sig=%s match=%s body_len=%d",
-        signature[:30] if signature else "(empty)",
-        computed[:30],
-        hmac.compare_digest(computed, signature),
+        "Webhook: received_sig=%s... computed_sig=%s... match=%s body_len=%d",
+        received_sig[:20] if received_sig else "(empty)",
+        expected[:20],
+        hmac.compare_digest(expected, received_sig),
         len(body),
     )
 
-    if not hmac.compare_digest(computed, signature):
+    if not hmac.compare_digest(expected, received_sig):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid signature",
