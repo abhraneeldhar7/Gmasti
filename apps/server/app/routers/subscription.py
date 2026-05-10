@@ -33,7 +33,7 @@ def create_subscription(current_user=Depends(get_current_user)):
 
     payload = {
         "plan_id": settings.razorpay_plan_id,
-        "total_count": 0,
+        "total_count": 100,
         "customer_notify": 1,
         "notes": {
             "user_id": current_user["user_id"],
@@ -48,10 +48,11 @@ def create_subscription(current_user=Depends(get_current_user)):
             auth=_razorpay_auth(),
         )
 
-    if response.status_code != 200:
+    if response.status_code not in (200, 201):
+        detail = response.json().get("error", {}).get("description", "Unknown error")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="Failed to create subscription with Razorpay.",
+            detail=f"Razorpay error: {detail}",
         )
 
     data = response.json()
